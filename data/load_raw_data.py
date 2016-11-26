@@ -25,7 +25,8 @@ class LoadRawData:
                 path = root + "\\" + subdir
                 for root1, subdirs1, files1 in os.walk(path):
                     for file1 in files1:
-                        music = sunau.open(root1 + "\\" + file1, 'r')
+                        cur_path = root1 + "\\" + file1
+                        music = sunau.open(cur_path, 'r')
                         nframes = music.getnframes()
                         # 读取波形数据
                         str_data = music.readframes(nframes)
@@ -43,6 +44,7 @@ class LoadRawData:
                             data = wave_data
                         else:
                             data = np.vstack((data, wave_data))
+                        print cur_path + " done."
 
         print data.shape
         return data
