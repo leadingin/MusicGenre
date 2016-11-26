@@ -11,7 +11,7 @@ import numpy as np
 from sklearn.cross_validation import train_test_split
 from sklearn.svm import SVC
 
-file_path = "F:\dh\DL\music\GTZAN_genres_au"
+file_path = "/home/wang/sgx/data/genres"
 data = loader.LoadRawData().load(file_path)
 np.savetxt('data/rawData.txt', data, fmt='%s', newline='\n')
 
