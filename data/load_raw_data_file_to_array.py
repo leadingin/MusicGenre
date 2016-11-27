@@ -16,7 +16,7 @@ class LoadRawDataFileToArray:
 
     def load(self, path):
         f = open(path, "r")
-        result = [[np.float32(v) for v in line.rstrip('\n').split(' ')] for line in f]
+        result = [[np.float32(v) for v in line.strip().split(' ')] for line in f]
         f.close()
         print "data shape: %i,%i" %(len(result), len(result[0]))
         return result
