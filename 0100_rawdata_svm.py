@@ -24,7 +24,7 @@ for genre in range(10): #共10种风格
         y.append(genre)
 labels = np.array(y)
 t1 = time.time()
-data = f2a.LoadRawDataFileToArray().load("data/merge/allRawData.txt", True) #True: 查看每行读取情况，每50行打印一次
+data = f2a.LoadRawDataFileToArray().load("data/merge/allRawData.txt")
 t2 = time.time()
 print "data.shape"
 print "Time cost: %f s." %(t2-t1)

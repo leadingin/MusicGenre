@@ -7,7 +7,6 @@
 """
 
 import numpy as np
-import gc
 
 
 class LoadRawDataFileToArray:
@@ -15,27 +14,9 @@ class LoadRawDataFileToArray:
     def __init__(self):
         pass
 
-    def load(self, path, print_lines):
+    def load(self, path):
         f = open(path, "r")
-        result = [[]]
-        line_num = 0
-        while True:
-            line = f.readline()
-            if line:
-                line = line.strip()
-                arr_str = line.split(" ")
-                arr = [np.float32(x) for x in arr_str]
-                result.append(arr)
-                del line, arr_str, arr
-                # print result[line_num+1][0:5]
-                if print_lines:
-                    line_num += 1
-                    if line_num % 50 == 0:
-                        print "line %i finished" % (line_num)
-                        gc.collect()
-            else:
-                break
+        result = [[np.float32(v) for v in line.rstrip('\n').split(' ')] for line in f]
         f.close()
-        del result[0]
         print "data shape: %i,%i" %(len(result), len(result[0]))
         return result
