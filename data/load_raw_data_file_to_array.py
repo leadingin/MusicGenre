@@ -19,9 +19,7 @@ class LoadRawDataFileToArray:
         while True:
             line = f.readline()
             if line:
-                # 空格\n 所以空格在倒数第2个位置
-                if line[-2] == " ":
-                    line = line[:-2]
+                line = line.strip()
                 arr_str = line.split(" ")
                 arr_int = [int(x) for x in arr_str]
                 result.append(arr_int)
