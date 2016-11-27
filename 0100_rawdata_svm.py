@@ -6,6 +6,7 @@
 @time: 2016/11/25 12:43
 """
 
+import data.load_raw_data_file_to_array as f2a
 import numpy as np
 from sklearn.cross_validation import train_test_split
 from sklearn.svm import SVC
@@ -23,7 +24,7 @@ for genre in range(10): #共10种风格
         y.append(genre)
 labels = np.array(y)
 t1 = time.time()
-data = np.loadtxt("data/merge/allRawData.txt")
+data = f2a.LoadRawDataFileToArray().load("data/merge/allRawData.txt", True) #True: 查看每行读取情况，每50行打印一次
 t2 = time.time()
 print "data.shape"
 print "Time cost: %f s." %(t2-t1)
