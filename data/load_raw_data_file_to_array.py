@@ -21,7 +21,7 @@ class LoadRawDataFileToArray:
             if line:
                 line = line.strip()
                 arr_str = line.split(" ")
-                arr_int = [int(x) for x in arr_str]
+                arr_int = [float(x) for x in arr_str]
                 result.append(arr_int)
                 if print_lines:
                     line_num += 1
