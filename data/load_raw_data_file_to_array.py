@@ -6,6 +6,9 @@
 @time: 2016/11/27 15:54
 """
 
+import numpy as np
+import gc
+
 
 class LoadRawDataFileToArray:
 
@@ -21,12 +24,15 @@ class LoadRawDataFileToArray:
             if line:
                 line = line.strip()
                 arr_str = line.split(" ")
-                arr_int = [float(x) for x in arr_str]
-                result.append(arr_int)
+                arr = [np.float32(x) for x in arr_str]
+                result.append(arr)
+                del line, arr_str, arr
+                # print result[line_num+1][0:5]
                 if print_lines:
                     line_num += 1
                     if line_num % 50 == 0:
                         print "line %i finished" % (line_num)
+                        gc.collect()
             else:
                 break
         f.close()
