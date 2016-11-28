@@ -26,7 +26,6 @@ labels = np.array(y)
 t1 = time.time()
 data = f2a.LoadRawDataFileToArray().load("data/merge/allRawData.txt")
 t2 = time.time()
-print "data.shape"
 print "Time cost: %f s." %(t2-t1)
 print "start training"
 t3 = time.time()
