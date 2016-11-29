@@ -17,8 +17,12 @@ TOTAL_ROW_NUM = 1000
 class_num = 0
 line_num = 0
 
+'''
 fr = open("merge/allRawData.txt", "r")
 fw = open("merge/raw_data.txt", "w")
+'''
+fr = open("transAllData.txt", "r")
+fw = open("merge/scat_data.txt", "w")
 for line in fr:
     # line += str(class_num) not worked
     line = line.strip() + " " + str(class_num) + "\n" # cancel "\n" and "\r"
@@ -31,7 +35,11 @@ fr.close()
 fw.close()
 
 print "Verify new file:"
+
+'''
 fr1 = open("merge/raw_data.txt", "r")
+'''
+fr1 = open("merge/scat_data.txt", "r")
 for i in range(1000):
     line_num1 = i + 1
     l = fr1.readline()[-10:]

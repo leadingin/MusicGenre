@@ -12,7 +12,7 @@ http://friskit.me/2014/10/22/shuffle-train-data-in-numpy/
 
 import numpy as np
 
-#data = np.loadtxt('data/transAllData.txt')
+data = np.loadtxt('transAllData.txt')
 num = 100 # 每种风格音乐文件个数
 tempArray = []
 y = []
