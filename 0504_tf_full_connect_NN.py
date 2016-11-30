@@ -123,6 +123,7 @@ init = tf.global_variables_initializer()
 with tf.Session() as sess:
     sess.run(init)
 
+    t1=time.time()
     # Training cycle
     for epoch in range(training_epochs):
         avg_cost = 0.
@@ -140,6 +141,8 @@ with tf.Session() as sess:
             print("Epoch:", '%04d' % (epoch + 1), "cost=", \
                   "{:.9f}".format(avg_cost))
     print("Optimization Finished!")
+    t2 = time.time()
+    print("Training cost: " + str(t2-t1) + " s")
 '''
     # Test model
     correct_prediction = tf.equal(tf.argmax(pred, 1), tf.argmax(y, 1))
