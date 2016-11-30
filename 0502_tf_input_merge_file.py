@@ -8,6 +8,7 @@
 
 from __future__ import print_function
 import tensorflow as tf
+import time
 
 
 def file_len(fname):
@@ -17,20 +18,34 @@ def file_len(fname):
     return i + 1
 
 
-filename = "data/csv_test_data.csv"
+def column_num(fname):
+    with open(fname) as f:
+        line = f.readline().split(" ")
+        # the last column is the class number -->  -1
+        return len(line)
+
+
+filename = "data/merge/scat_data.txt"
 
 # setup text reader
 file_length = file_len(filename)
+column_num = column_num(filename)
 filename_queue = tf.train.string_input_producer([filename])
-reader = tf.TextLineReader(skip_header_lines=1)
+reader = tf.TextLineReader()
 _, csv_row = reader.read(filename_queue)
 
 # setup CSV decoding
-record_defaults = [[0], [0], [0], [0], [0]]
-col1, col2, col3, col4, col5 = tf.decode_csv(csv_row, record_defaults=record_defaults, field_delim=" ")
+# Default values, in case of empty columns. Also specifies the type of the
+# decoded result.
+record_defaults = [["null"] for x in range (column_num)]
+t1 = time.time()
+cols = tf.decode_csv(csv_row, record_defaults=record_defaults, field_delim=" ")
+t2 = time.time()
+print ("decode csv cost "+ str(t2-t1) +" s.")
 
 # turn features back into a tensor
-features = tf.pack([col1, col2, col3, col4])
+features = tf.pack(cols[0:-1])
+labels = cols[-1]
 
 print("loading, " + str(file_length) + " line(s)\n")
 with tf.Session() as sess:
@@ -42,8 +57,8 @@ with tf.Session() as sess:
 
     for i in range(file_length):
         # retrieve a single instance
-        example, label = sess.run([features, col5])
-        print(example, label)
+        feature, label = sess.run([features, labels])
+        print(feature, label)
 
     coord.request_stop()
     coord.join(threads)
