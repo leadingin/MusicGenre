@@ -10,7 +10,10 @@ from __future__ import print_function
 import tensorflow as tf
 import time
 
-def input_pipeline(filenames, batch_size, num_epochs=None):
+from numpy.distutils.system_info import numarray_info
+
+
+def input_pipeline(filenames, batch_size, num_threads, num_epochs=None):
     features, labels = read_csv_file(filenames, field_delim=" ")
     # min_after_dequeue defines how big a buffer we will randomly sample
     #   from -- bigger means better shuffling but slower start up and more
@@ -18,11 +21,11 @@ def input_pipeline(filenames, batch_size, num_epochs=None):
     # capacity must be larger than min_after_dequeue and the amount larger
     #   determines the maximum we will prefetch.  Recommendation:
     #   min_after_dequeue + (num_threads + a small safety margin) * batch_size
-    min_after_dequeue = 10000
-    capacity = min_after_dequeue + 5 * batch_size
+    min_after_dequeue = 50000
+    capacity = min_after_dequeue + 3 * batch_size
     feature_batch, label_batch = tf.train.shuffle_batch(
         [features, labels], batch_size=batch_size, capacity=capacity,
-        min_after_dequeue=min_after_dequeue)
+        min_after_dequeue=min_after_dequeue, num_threads=num_threads)
     return feature_batch, label_batch
 
 def file_len(fname):
@@ -66,6 +69,7 @@ learning_rate = 0.001
 training_epochs = 15
 batch_size = 50
 display_step = 1
+num_threads = 4
 file_path = "data/merge/scat_data.txt"
 column_num = count_column_num(file_path, " ")
 file_length = file_len(file_path)
@@ -125,7 +129,7 @@ with tf.Session() as sess:
         total_batch = int(file_length / batch_size)
         # Loop over all batches
         for i in range(total_batch):
-            batch_tensor_x, batch_tensor_y = input_pipeline(file_path, 50)
+            batch_tensor_x, batch_tensor_y = input_pipeline(file_path, batch_size=batch_size, num_threads=num_threads)
             # Run optimization op (backprop) and cost op (to get loss value)
             batch_x, batch_y = sess.run([batch_tensor_x, batch_tensor_y])
             _, c = sess.run([optimizer, cost], feed_dict={x: batch_x, y: batch_y})
