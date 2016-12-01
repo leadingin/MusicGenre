@@ -25,7 +25,7 @@ def column_num(fname):
         return len(line)
 
 
-filename = "data/merge/scat_data.txt"
+filename = "data/merge/scat_data_test.txt"
 
 # setup text reader
 file_length = file_len(filename)
@@ -49,7 +49,7 @@ labels = cols[-1]
 
 print("loading, " + str(file_length) + " line(s)\n")
 with tf.Session() as sess:
-    tf.initialize_all_variables().run()
+    tf.global_variables_initializer()
 
     # start populating filename queue
     coord = tf.train.Coordinator()
@@ -58,7 +58,7 @@ with tf.Session() as sess:
     for i in range(file_length):
         # retrieve a single instance
         feature, label = sess.run([features, labels])
-        print(feature, label)
+        print (feature, " --> " + label)
 
     coord.request_stop()
     coord.join(threads)

@@ -21,7 +21,7 @@ def input_pipeline(filenames, batch_size, num_threads, num_epochs=None):
     # capacity must be larger than min_after_dequeue and the amount larger
     #   determines the maximum we will prefetch.  Recommendation:
     #   min_after_dequeue + (num_threads + a small safety margin) * batch_size
-    min_after_dequeue = 50000
+    min_after_dequeue = 10000
     capacity = min_after_dequeue + 3 * batch_size
     feature_batch, label_batch = tf.train.shuffle_batch(
         [features, labels], batch_size=batch_size, capacity=capacity,
@@ -67,10 +67,10 @@ def read_csv_file(filename_queue, field_delim):
 # Parameters
 learning_rate = 0.001
 training_epochs = 15
-batch_size = 50
+batch_size = 2
 display_step = 1
 num_threads = 4
-file_path = "data/merge/scat_data.txt"
+file_path = "data/merge/scat_data_test.txt"
 column_num = count_column_num(file_path, " ")
 file_length = file_len(file_path)
 # Network Parameters
@@ -116,10 +116,32 @@ pred = multilayer_perceptron(x, weights, biases)
 cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(pred, y))
 optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(cost)
 
-# Initializing the variables
-init = tf.global_variables_initializer()
+
+batch_tensor_x, batch_tensor_y = input_pipeline(file_path, batch_size=batch_size, num_threads=num_threads)
 
 # Launch the graph
+with tf.Session() as sess:
+    # Start populating the filename queue.
+    coord = tf.train.Coordinator()
+    threads = tf.train.start_queue_runners(coord=coord)
+
+    # Retrieve a single instance:
+    try:
+        # while not coord.should_stop():
+        while True:
+            example, label = sess.run([batch_tensor_x, batch_tensor_y])
+            print (example, " --> " + label)
+    except tf.errors.OutOfRangeError:
+        print ('Done reading')
+    finally:
+        coord.request_stop()
+
+    coord.join(threads)
+    sess.close()
+
+
+
+'''
 with tf.Session() as sess:
     sess.run(init)
 
@@ -143,7 +165,7 @@ with tf.Session() as sess:
     print("Optimization Finished!")
     t2 = time.time()
     print("Training cost: " + str(t2-t1) + " s")
-'''
+
     # Test model
     correct_prediction = tf.equal(tf.argmax(pred, 1), tf.argmax(y, 1))
     # Calculate accuracy
