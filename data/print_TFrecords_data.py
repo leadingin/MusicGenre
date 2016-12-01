@@ -25,7 +25,7 @@ for serialized_example in tf.python_io.tf_record_iterator(input_file):
     example.ParseFromString(serialized_example)
 
     # Read data in specified format
-    label = example.features.feature["label"].float_list.value
+    label = example.features.feature["label"].int64_list.value
     features = example.features.feature["features"].float_list.value
     print("Number: {}, label: {}, features: {}".format(print_number, label, features[-10:]))
 

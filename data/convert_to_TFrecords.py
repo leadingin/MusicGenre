@@ -28,12 +28,12 @@ def convert_tfrecords(input_filename, output_filename):
     for line in open(input_file, "r"):
         # Split content in CSV file
         data = line.split(" ")
-        label = float(data[-1])
+        label = int(data[-1])
         features = [float(i) for i in data[0:-1]]
 
         # Write each example one by one
         example = tf.train.Example(features=tf.train.Features(feature={
-            "label":tf.train.Feature(float_list=tf.train.FloatList(value=[label])),
+            "label":tf.train.Feature(int64_list=tf.train.Int64List(value=[label])),
             "features":tf.train.Feature(float_list=tf.train.FloatList(value=features)),
         }))
 
