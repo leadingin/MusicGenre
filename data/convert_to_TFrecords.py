@@ -43,4 +43,4 @@ def convert_tfrecords(input_filename, output_filename):
     print("Successfully convert {} to {}".format(input_file, output_file))
 
 
-convert_tfrecords("scat_data_test.txt", "scat_data_test.tfrecords")
+convert_tfrecords("scat_data.txt", "scat_data.tfrecords")

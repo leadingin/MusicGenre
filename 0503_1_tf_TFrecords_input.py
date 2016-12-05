@@ -39,8 +39,17 @@ init = tf.global_variables_initializer()
 
 with tf.Session() as sess:
     sess.run(init)
-    threads = tf.train.start_queue_runners(sess=sess)
-    for i in range(10):
-        val, l= sess.run([img_batch, label_batch])
-        print(val[-10:], l)
+    coord = tf.train.Coordinator()
+    threads = tf.train.start_queue_runners(sess=sess, coord=coord)
+    try:
+        for i in range(10):
+            val, l= sess.run([img_batch, label_batch])
+            print(val[-10:], l)
+    except tf.errors.OutOfRangeError:
+        print ('Done reading')
+    finally:
+        coord.request_stop()
+
+    coord.join(threads)
+    sess.close()
 
