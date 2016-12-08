@@ -5,7 +5,7 @@
 @name: 0000_preparing_data.py
 @time: 2016/11/27 12:20
 """
-
+from __future__ import print_function
 import data.load_raw_data_to_file as loader
 import os
 
@@ -29,4 +29,4 @@ for root, subdirs, files in os.walk(data_path+"converted"):
     for file in files:
         ld.merge_cvt_files("data/converted/"+file, "data/merge/allRawData.txt")
 
-print "Finished."
+print ("Finished.")

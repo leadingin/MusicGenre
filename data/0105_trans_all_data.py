@@ -6,6 +6,7 @@
 @time: 2016/11/23 20:11
 """
 import numpy as np
+from __future__ import print_function
 
 data = np.loadtxt('data/allFeatureData.txt')
 # print data
@@ -40,7 +41,7 @@ for j in range(data.shape[1]): #每20列代表一个文件
         for i in range(data.shape[0]):  # 行 433
             tempArray.append(np.float32(data[i][j]))
 
-print result.shape
+print (result.shape)
 
 np.savetxt('data/transAllData.txt',result,fmt='%s',newline='\n')
 

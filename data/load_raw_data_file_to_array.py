@@ -6,6 +6,7 @@
 @time: 2016/11/27 15:54
 """
 
+from __future__ import print_function
 import numpy as np
 import re
 
@@ -23,7 +24,7 @@ class LoadRawDataFileToArray:
             r = []
             counter += 1
             if counter % 50 == 0:
-                print "line %i finished." % (counter)
+                print ("line %i finished." % (counter))
             for v in line.strip().split(' '):
                 try:
                     r.append(np.float32(v))
@@ -35,5 +36,5 @@ class LoadRawDataFileToArray:
             result.append(r)
         f.close()
         del result[0]
-        print "data shape: %i,%i" %(len(result), len(result[0]))
+        print ("data shape: %i,%i" %(len(result), len(result[0])))
         return result

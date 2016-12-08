@@ -5,6 +5,8 @@
 @name: 0104_trans_test_data.py
 @time: 2016/11/23 20:11
 """
+
+from __future__ import print_function
 import numpy as np
 
 data = np.loadtxt('data/testFeatureData.txt')
@@ -40,7 +42,7 @@ for j in range(data.shape[1]): #每20列代表一个文件
         for i in range(data.shape[0]):  # 行 433
             tempArray.append(np.float32(data[i][j]))
 
-print result.shape
+print (result.shape)
 
 np.savetxt('data/transTestData.txt',result,fmt='%s',newline='\n')
 

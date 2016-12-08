@@ -6,6 +6,7 @@
 @time: 11/30/16 5:45 PM
 """
 
+from __future__ import print_function
 import tensorflow as tf
 import numpy as np
 
@@ -40,9 +41,9 @@ with tf.Session() as sess:
         # while not coord.should_stop():
         while True:
             example, label = sess.run([featureBatch, labelBatch])
-            print example
+            print (example)
     except tf.errors.OutOfRangeError:
-        print 'Done reading'
+        print ('Done reading')
     finally:
         coord.request_stop()
 

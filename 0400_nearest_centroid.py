@@ -23,4 +23,4 @@ data_train, data_test, label_train, label_test = train_test_split(data, labels, 
 
 clf = NearestCentroid(metric='euclidean', shrink_threshold=None)
 clf.fit(data_train, label_train)
-print clf.score(data_test, label_test)
+print (clf.score(data_test, label_test))

@@ -5,6 +5,8 @@
 @name: 0300_multi-layer_perceptron.py
 @time: 2016/11/24 20:35
 """
+
+from __future__ import print_function
 import numpy as np
 from sklearn.neural_network import MLPClassifier
 from sklearn.cross_validation import train_test_split
@@ -28,4 +30,4 @@ clf = MLPClassifier(activation='logistic', alpha=1e-05, batch_size='auto',
                    solver='sgd', tol=0.0001, validation_fraction=0.1, verbose=False,
                    warm_start=False)
 clf.fit(data_train, label_train)
-print clf.score(data_test, label_test)
+print (clf.score(data_test, label_test))

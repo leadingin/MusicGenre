@@ -9,7 +9,7 @@
 打散数据
 http://friskit.me/2014/10/22/shuffle-train-data-in-numpy/
 """
-
+from __future__ import print_function
 import numpy as np
 
 data = np.loadtxt('transAllData.txt')
@@ -20,6 +20,6 @@ for genre in range(10): #共10种风格
     for i in range(num):
         y.append(genre)
 labels = np.array(y)
-print labels
+print (labels)
 
 
