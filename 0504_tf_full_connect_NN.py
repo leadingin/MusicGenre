@@ -80,7 +80,7 @@ biases = {
 pred = multilayer_perceptron(x, weights, biases)
 
 # Define loss and optimizer
-cost = tf.reduce_mean(tf.nn.sampled_softmax_loss(pred, y))
+cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(pred, y))
 optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(cost)
 
 # Launch the graph
@@ -105,6 +105,8 @@ with tf.Session() as sess:
             features_array = np.array([features])
             features_array = np.reshape(features_array, (1, n_input))
             label_array = dense_to_one_hot(np.array([label]), num_classes = n_classes)
+
+            print ("features: {}, label: {}".format(features_array, label_array))
             _, c = sess.run([optimizer, cost], feed_dict={x: features_array, y: label_array})
         # Display logs per epoch step
         if epoch % display_step == 0:
