@@ -52,8 +52,8 @@ class LoadRawData:
                         # finally:
                         #     f.close()
                         d = np.array(wave_data)
-                        np.savetxt('data/raw/' + subdir + "." + file1 + ".txt", d, fmt='%s', delimiter=' ')
-                        print cur_path + " done."
+                        np.savetxt('raw/' + subdir + "." + file1 + ".txt", d, fmt='%s', delimiter=' ')
+                        print (cur_path + " done.")
 
     def convert_single_files(self, origin_file_path, target_file_path):
         of = open(origin_file_path, "r")
@@ -62,7 +62,7 @@ class LoadRawData:
         tf.write(of_str.replace("\n", " "))
         of.close()
         tf.close()
-        print target_file_path + " converted."
+        print (target_file_path + " converted.")
 
     def merge_cvt_files(self, origin_cvt_path, target_file_path):
         of = open(origin_cvt_path, "r")
@@ -71,7 +71,7 @@ class LoadRawData:
         tf.write(of_str + "\n")
         of.close()
         tf.close()
-        print origin_cvt_path + " merged."
+        print (origin_cvt_path + " merged.")
 
 
 

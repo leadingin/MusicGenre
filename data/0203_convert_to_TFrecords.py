@@ -2,7 +2,7 @@
 
 """
 @author: Songgx
-@file: 0201_convert_to_TFrecords.py
+@file: 0203_convert_to_TFrecords.py
 @time: 12/1/16 5:07 PM
 """
 
@@ -43,4 +43,4 @@ def convert_tfrecords(input_filename, output_filename):
     print("Successfully convert {} to {}".format(input_file, output_file))
 
 
-convert_tfrecords("scat_data.txt", "scat_data.tfrecords")
+convert_tfrecords("scat_data_test.txt", "scat_data_test.tfrecords")

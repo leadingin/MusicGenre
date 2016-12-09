@@ -2,7 +2,7 @@
 
 """
 @author: Songgx
-@file: 0200_add_class_in_each_row.py
+@file: 0201_add_class_in_each_row.py
 @time: 11/28/16 7:20 PM
 """
 
@@ -19,12 +19,13 @@ TOTAL_ROW_NUM = 1000
 class_num = 0
 line_num = 0
 
-'''
+
 fr = open("merge/allRawData.txt", "r")
 fw = open("merge/raw_data.txt", "w")
 '''
 fr = open("transAllData.txt", "r")
 fw = open("merge/scat_data.txt", "w")
+'''
 for line in fr:
     # line += str(class_num) not worked
     line = line.strip() + " " + str(class_num) + "\n" # cancel "\n" and "\r"
