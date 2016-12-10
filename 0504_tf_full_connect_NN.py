@@ -8,8 +8,9 @@
 
 from __future__ import print_function
 import tensorflow as tf
-import time
 import numpy as np
+
+tf.logging.set_verbosity(tf.logging.INFO)
 
 def file_len(fname):
     with open(fname) as f:
@@ -44,7 +45,7 @@ def read_and_decode(filename):
                                            'label': tf.FixedLenFeature([], tf.int64),
                                            # We know the length of both fields. If not the
                                            # tf.VarLenFeature could be used
-                                           'features': tf.FixedLenFeature([8660], tf.float32),
+                                           'features': tf.FixedLenFeature([n_input], tf.float32),
                                        })
 
     X = tf.cast(features['features'], tf.float32)
@@ -58,29 +59,32 @@ learning_rate = 0.001
 training_epochs = 10000
 display_step = 1
 num_threads = 4
-csv_file_path = "data/tvtsets/training_scat_data.txt"
-training_file_path = "data/tvtsets/training_scat_data.tfrecords"
+csv_file_path = "data/tvtsets/test_scat_data.txt"
+training_file_path = "data/tvtsets/test_scat_data.tfrecords"
+batch_size = 20
 column_num = count_column_num(csv_file_path, " ")
 # file_length = file_len(csv_file_path)
 # Network Parameters
-n_hidden_1 = 256  # 1st layer number of features
-n_hidden_2 = 256  # 2nd layer number of features
+n_hidden_1 = 1024  # 1st layer number of features
+n_hidden_2 = 1024  # 2nd layer number of features
 n_input = column_num - 1
-n_classes = 10  # MNIST total classes (0-9 digits)
+n_classes = 10  # total classes (0-9 digits)
 
 # tf Graph input
-x = tf.placeholder("float", [None, n_input])
-y = tf.placeholder("float", [None, n_classes])
+
+x = tf.placeholder(tf.float32, [batch_size, n_input])
+y = tf.placeholder(tf.int32, [batch_size,])
+
 
 
 # Create model
 def multilayer_perceptron(x, weights, biases):
     # Hidden layer with RELU activation
     layer_1 = tf.add(tf.matmul(x, weights['h1']), biases['b1'])
-    layer_1 = tf.nn.relu(layer_1)
+    layer_1 = tf.nn.sigmoid(layer_1)
     # Hidden layer with RELU activation
     layer_2 = tf.add(tf.matmul(layer_1, weights['h2']), biases['b2'])
-    layer_2 = tf.nn.relu(layer_2)
+    layer_2 = tf.nn.sigmoid(layer_2)
     # Output layer with linear activation
     out_layer = tf.matmul(layer_2, weights['out']) + biases['out']
     return out_layer
@@ -102,13 +106,33 @@ biases = {
 pred = multilayer_perceptron(x, weights, biases)
 
 # Define loss and optimizer
-cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(pred, y))
+cost = tf.reduce_mean(tf.nn.sparse_softmax_cross_entropy_with_logits(pred, y))
 optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(cost)
 
 # Launch the graph
 
-init = tf.global_variables_initializer()
+audio, label = read_and_decode(training_file_path)
 
+#使用shuffle_batch可以随机打乱输入
+audio_batch, label_batch = tf.train.shuffle_batch([audio, label],
+                                                batch_size=batch_size, capacity=2000,
+                                                min_after_dequeue=1000)
+
+sess = tf.Session()
+init = tf.global_variables_initializer()
+sess.run(init)
+tf.train.start_queue_runners(sess=sess)
+
+for i in range(10000):
+    # pass it in through the feed_dict
+    audio_batch_vals, label_batch_vals = sess.run([audio_batch, label_batch])
+
+    _, loss_val = sess.run([optimizer, cost], feed_dict={x:audio_batch_vals, y:label_batch_vals})
+    print (loss_val)
+
+
+
+'''
 with tf.Session() as sess:
     sess.run(init)
 
@@ -136,9 +160,8 @@ with tf.Session() as sess:
     t2 = time.time()
     print("Training cost: " + str(t2-t1) + " s")
 
-    f.close()
 
-'''
+
     # Test model
     correct_prediction = tf.equal(tf.argmax(pred, 1), tf.argmax(y, 1))
     # Calculate accuracy
