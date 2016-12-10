@@ -16,11 +16,19 @@ VALIDATION_SCALE = 0.2
 # raw_data.txt 是尾部加了标签的, allRawData.txt 没有标签
 # 同样的，scat_data.txt有标签
 
+'''
 RAW_FILE_PATH = "merge/raw_data.txt"
 
 TRAINING_FILE_PATH = "tvtsets/training_raw_data.txt"
 VALIDATION_FILE_PATH = "tvtsets/validation_raw_data.txt"
 TEST_FILE_PATH = "tvtsets/test_raw_data.txt"
+'''
+
+RAW_FILE_PATH = "merge/scat_data.txt"
+
+TRAINING_FILE_PATH = "tvtsets/training_scat_data.txt"
+VALIDATION_FILE_PATH = "tvtsets/validation_scat_data.txt"
+TEST_FILE_PATH = "tvtsets/test_scat_data.txt"
 
 def create_training_validation_test_dataset():
     if TRAINING_SCALE + VALIDATION_SCALE > 1:
@@ -48,6 +56,8 @@ def create_training_validation_test_dataset():
         test_index = index[int(EACH_GENRE_LINE_NUM * (TRAINING_SCALE + VALIDATION_SCALE)):]
 
         line_content = raw_file.readline()
+        if line_content.strip() == "":
+            raise ValueError("Empty Line founded")
 
         if the_genre_line_counter in training_index:
             training_file.write(line_content)
@@ -112,10 +122,9 @@ def count_line_num(file_path):
 
 if __name__ == "__main__":
     # print(count_line_num("merge/raw_data.txt"))
-    # create_training_validation_test_dataset()
-    # verify_dataset([TRAINING_FILE_PATH, VALIDATION_FILE_PATH, TEST_FILE_PATH])
-    # print ("All Finished")
-    print(count_line_num("merge/raw_data.txt"))
+    create_training_validation_test_dataset()
+    verify_dataset([TRAINING_FILE_PATH, VALIDATION_FILE_PATH, TEST_FILE_PATH])
+    print ("All Finished")
 
 
 
