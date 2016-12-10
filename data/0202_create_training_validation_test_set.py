@@ -43,7 +43,8 @@ def create_training_validation_test_dataset():
             the_genre_line_counter += 1
 
         training_index = index[:int(EACH_GENRE_LINE_NUM * TRAINING_SCALE)]
-        validation_index = index[int(EACH_GENRE_LINE_NUM * TRAINING_SCALE):int(EACH_GENRE_LINE_NUM * (TRAINING_SCALE + VALIDATION_SCALE))]
+        validation_index = index[int(EACH_GENRE_LINE_NUM * TRAINING_SCALE):int(EACH_GENRE_LINE_NUM * \
+                                                                               (TRAINING_SCALE + VALIDATION_SCALE))]
         test_index = index[int(EACH_GENRE_LINE_NUM * (TRAINING_SCALE + VALIDATION_SCALE)):]
 
         line_content = raw_file.readline()
