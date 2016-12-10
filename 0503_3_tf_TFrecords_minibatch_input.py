@@ -9,7 +9,7 @@
 from __future__ import print_function
 import tensorflow as tf
 
-# example: https://github.com/ycszen/tf_lab/blob/master/reading_data/example_tfrecords.py
+# https://indico.io/blog/tensorflow-data-inputs-part1-placeholders-protobufs-queues/
 
 def read_and_decode(filename):
     filename_queue = tf.train.string_input_producer([filename])
@@ -37,6 +37,27 @@ img_batch, label_batch = tf.train.shuffle_batch([img, label],
                                                 min_after_dequeue=1000)
 init = tf.global_variables_initializer()
 
+# simple model
+w = tf.get_variable("w1", [8660, 10])
+y_pred = tf.matmul(img_batch, w)
+loss = tf.nn.sparse_softmax_cross_entropy_with_logits(y_pred, label_batch)
+
+# for monitoring
+loss_mean = tf.reduce_mean(loss)
+train_op = tf.train.AdamOptimizer().minimize(loss)
+
+sess = tf.Session()
+init = tf.global_variables_initializer()
+sess.run(init)
+tf.train.start_queue_runners(sess=sess)
+
+for i in range(200):
+  # pass it in through the feed_dict
+  _, loss_val = sess.run([train_op, loss_mean])
+  print (loss_val)
+
+
+'''
 with tf.Session() as sess:
     sess.run(init)
     coord = tf.train.Coordinator()
@@ -52,4 +73,4 @@ with tf.Session() as sess:
 
     coord.join(threads)
     sess.close()
-
+'''

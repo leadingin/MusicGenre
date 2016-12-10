@@ -17,8 +17,8 @@ import os
 # 2,5,3,3,6,7,7,5,1,1
 
 
-def convert_tfrecords(input_filename, output_filename):
-    current_path = os.getcwd() + "/merge/"
+def convert_tfrecords(input_filename, output_filename, data_folder):
+    current_path = os.getcwd() + data_folder
     input_file = os.path.join(current_path, input_filename)
     output_file = os.path.join(current_path, output_filename)
     print("Start to convert {} to {}".format(input_file, output_file))
@@ -43,4 +43,14 @@ def convert_tfrecords(input_filename, output_filename):
     print("Successfully convert {} to {}".format(input_file, output_file))
 
 
-convert_tfrecords("scat_data_test.txt", "scat_data_test.tfrecords")
+# convert_tfrecords("scat_data_test.txt", "scat_data_test.tfrecords", "/merge/")
+
+if __name__ == "__main__":
+
+    # 转换所有tvtsets目录下的txt文件为tfrecords文件
+    for root, dirs, file in os.walk("tvtsets"):
+        for fn in file:
+            if fn.endswith(".txt"):
+                tfrecords_name = fn.replace(".txt", ".tfrecords")
+                # print (tfrecords_name)
+                convert_tfrecords(fn, tfrecords_name, "/tvtsets/")

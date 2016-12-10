@@ -24,6 +24,7 @@ def count_column_num(fname, field_delim):
         # the last column is the class number -->  -1
         return len(line)
 
+
 def dense_to_one_hot(labels_dense, num_classes=10):
     """Convert class labels from scalars to one-hot vectors."""
     num_labels = labels_dense.shape[0]
@@ -31,13 +32,34 @@ def dense_to_one_hot(labels_dense, num_classes=10):
     labels_one_hot = np.zeros((num_labels, num_classes))
     labels_one_hot.flat[index_offset + labels_dense.ravel()] = 1
     return labels_one_hot
+
+
+def read_and_decode(filename):
+    filename_queue = tf.train.string_input_producer([filename])
+
+    reader = tf.TFRecordReader()
+    _, serialized_example = reader.read(filename_queue)
+    features = tf.parse_single_example(serialized_example,
+                                       features={
+                                           'label': tf.FixedLenFeature([], tf.int64),
+                                           # We know the length of both fields. If not the
+                                           # tf.VarLenFeature could be used
+                                           'features': tf.FixedLenFeature([8660], tf.float32),
+                                       })
+
+    X = tf.cast(features['features'], tf.float32)
+    y = tf.cast(features['label'], tf.int32)
+
+    return X, y
+
+
 # Parameters
 learning_rate = 0.001
 training_epochs = 10000
 display_step = 1
 num_threads = 4
-csv_file_path = "data/merge/scat_data.txt"
-training_file_path = "data/merge/scat_data.tfrecords"
+csv_file_path = "data/tvtsets/training_scat_data.txt"
+training_file_path = "data/tvtsets/training_scat_data.tfrecords"
 column_num = count_column_num(csv_file_path, " ")
 # file_length = file_len(csv_file_path)
 # Network Parameters
@@ -106,8 +128,6 @@ with tf.Session() as sess:
             features_array = np.reshape(features_array, (1, n_input))
             label_array = dense_to_one_hot(np.array([label]), num_classes = n_classes)
 
-            with open("0504_log.txt", "w") as f:
-                f.write("features: {}, label: {}".format(features_array, label_array))
             _, c = sess.run([optimizer, cost], feed_dict={x: features_array, y: label_array})
         # Display logs per epoch step
         if epoch % display_step == 0:
