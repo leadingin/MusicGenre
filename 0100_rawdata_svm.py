@@ -9,7 +9,7 @@
 from __future__ import print_function
 import data.load_raw_data_file_to_array as f2a
 import numpy as np
-from sklearn.cross_validation import train_test_split
+from sklearn.model_selection import train_test_split
 from sklearn.svm import SVC
 
 import time

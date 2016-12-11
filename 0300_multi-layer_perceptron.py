@@ -9,7 +9,7 @@
 from __future__ import print_function
 import numpy as np
 from sklearn.neural_network import MLPClassifier
-from sklearn.cross_validation import train_test_split
+from sklearn.model_selection import train_test_split
 
 data = np.loadtxt('data/transAllData.txt')
 num = 100 # 每种风格音乐文件个数

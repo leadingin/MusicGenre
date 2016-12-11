@@ -136,7 +136,7 @@ with tf.Session() as sess:
     # Start input enqueue threads.
     coord = tf.train.Coordinator()
     threads = tf.train.start_queue_runners(sess=sess, coord=coord)
-    for epoch in range(10000):
+    for epoch in range(100):
         # pass it in through the feed_dict
         audio_batch_vals, label_batch_vals = sess.run([audio_batch, label_batch])
 
@@ -187,8 +187,8 @@ with tf.Session() as sess:
         9
         '''
 
-        if (label_test_val == pred_class_index[0]):
+        if label_test_val == pred_class_index[0]:
             correct_num += 1
-    print (("%i / %i is correct.") % (correct_num, test_example_number))
-    print (("Accuracy is %f .") % (float(correct_num) / test_example_number))
+    print("%i / %i is correct." % (correct_num, test_example_number))
+    print("Accuracy is %f ." % (float(correct_num) / test_example_number))
     sess.close()
