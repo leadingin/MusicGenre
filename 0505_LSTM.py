@@ -68,12 +68,12 @@ test_file_path = "data/tvtsets/test_scat_data.tfrecords"
 batch_size = 20
 column_num = count_column_num(training_csv_file_path, " ")
 # file_length = file_len(csv_file_path)
-# Network Parameters
-n_hidden_1 = 1024  # 1st layer number of features
-n_hidden_2 = 1024  # 2nd layer number of features
-n_hidden_3 = 1024  # 2nd layer number of features
 
-# h1:512 h2:512, acc is about:0.4
+# Network Parameters
+n_input = 28 # data input 8660 * 1 = 433 * 20
+n_steps = 28 # timesteps
+n_hidden = 128 # hidden layer num of features
+n_classes = 10 # MNIST total classes (0-9 digits)
 
 
 n_input = column_num - 1
@@ -81,41 +81,45 @@ n_classes = 10  # total classes (0-9 digits)
 
 # tf Graph input
 
-x = tf.placeholder(tf.float32, [batch_size, n_input])
+x = tf.placeholder(tf.float32, [batch_size, n_steps, n_input])
 y = tf.placeholder(tf.int32, [batch_size,])
 
-# Create model
-def multilayer_perceptron(x, weights, biases):
-    # Hidden layer with sigmoid activation
-    layer_1 = tf.add(tf.matmul(x, weights['h1']), biases['b1'])
-    layer_1 = tf.nn.sigmoid(layer_1)
-    # Hidden layer with sigmoid activation
-    layer_2 = tf.add(tf.matmul(layer_1, weights['h2']), biases['b2'])
-    layer_2 = tf.nn.sigmoid(layer_2)
-    # Hidden layer with sigmoid activation
-    layer_3 = tf.add(tf.matmul(layer_2, weights['h3']), biases['b3'])
-    layer_3 = tf.nn.sigmoid(layer_3)
-    # Output layer with linear activation
-    out_layer = tf.matmul(layer_3, weights['out']) + biases['out']
-    return out_layer
-
-
-# Store layers weight & bias
+# Define weights
 weights = {
-    'h1': tf.Variable(tf.random_normal([n_input, n_hidden_1])),
-    'h2': tf.Variable(tf.random_normal([n_hidden_1, n_hidden_2])),
-    'h3': tf.Variable(tf.random_normal([n_hidden_2, n_hidden_3])),
-    'out': tf.Variable(tf.random_normal([n_hidden_3, n_classes]))
+    'out': tf.Variable(tf.random_normal([n_hidden, n_classes]))
 }
 biases = {
-    'b1': tf.Variable(tf.random_normal([n_hidden_1])),
-    'b2': tf.Variable(tf.random_normal([n_hidden_2])),
-    'b3': tf.Variable(tf.random_normal([n_hidden_3])),
     'out': tf.Variable(tf.random_normal([n_classes]))
 }
 
+
+# Create model
+def LSTM(x, weights, biases):
+
+    # Prepare data shape to match `rnn` function requirements
+    # Current data input shape: (batch_size, n_steps, n_input)
+    # Required shape: 'n_steps' tensors list of shape (batch_size, n_input)
+
+    # Permuting batch_size and n_steps
+    x = tf.transpose(x, [1, 0, 2])
+    # Reshaping to (n_steps*batch_size, n_input)
+    x = tf.reshape(x, [-1, n_input])
+    # Split to get a list of 'n_steps' tensors of shape (batch_size, n_input)
+    x = tf.split(0, n_steps, x)
+
+    # Define a lstm cell with tensorflow
+    lstm_cell = rnn_cell.BasicLSTMCell(n_hidden, forget_bias=1.0)
+
+    # Get lstm cell output
+    outputs, states = rnn.rnn(lstm_cell, x, dtype=tf.float32)
+
+    # Linear activation, using rnn inner loop last output
+    return tf.matmul(outputs[-1], weights['out']) + biases['out']
+
+
+
 # Construct model
-pred = multilayer_perceptron(x, weights, biases)
+pred = LSTM(x, weights, biases)
 
 # Define loss and optimizer & correct_prediction
 cost = tf.reduce_mean(tf.nn.sparse_softmax_cross_entropy_with_logits(pred, y))
