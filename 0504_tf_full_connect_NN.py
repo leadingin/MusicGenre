@@ -142,7 +142,7 @@ with tf.Session() as sess:
     # Start input enqueue threads.
     coord = tf.train.Coordinator()
     threads = tf.train.start_queue_runners(sess=sess, coord=coord)
-    for epoch in range(10000):
+    for epoch in range(1000):
         # pass it in through the feed_dict
         audio_batch_vals, label_batch_vals = sess.run([audio_batch, label_batch])
 

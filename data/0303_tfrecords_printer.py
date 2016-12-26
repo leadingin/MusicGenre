@@ -8,6 +8,7 @@
 
 import tensorflow as tf
 import os
+import math
 
 # Read TFRecords file
 current_path = os.getcwd() + "/merge/"
@@ -29,7 +30,7 @@ for serialized_example in tf.python_io.tf_record_iterator(input_file):
     features_cA = example.features.feature["features_cA"].float_list.value
     features_cD = example.features.feature["features_cD"].float_list.value
     print("Number: {}, label: {} ,\nfeatures_cA: {},\nfeatures_cD: {}".format(print_number, label,
-                                                                           features_cA[-10:],  features_cD[-10:]))
+                                                                         features_cA[-10:],  features_cD[-10:]))
 
     # Return when reaching max print number
     if print_number > max_print_number:

@@ -10,6 +10,7 @@
 import tensorflow as tf
 import os
 import numpy as np
+import math
 
 # The data in cancer.csv:
 # 10,10,10,8,6,1,8,9,1,1
@@ -54,8 +55,22 @@ def convert_wavelets_tfrecords(input_file_folder, output_file_path):
                 cD = np.loadtxt(cur_cD_path, dtype=np.float32, delimiter="\n")
                 wavelets = np.vstack((cA, cD))
 
-                features_cA = [float(i) for i in cA]
-                features_cD = [float(i) for i in cD]
+                features_cA = []
+                for i in cA:
+                    val = float(i)
+                    if math.isnan(val):
+                        features_cA.append(0.)
+                    else:
+                        features_cA.append(val)
+
+                features_cD = []
+                for i in cD:
+                    val = float(i)
+                    if math.isnan(val):
+                        features_cD.append(0.)
+                    else:
+                        features_cD.append(val)
+
                 label = get_label(cur_cA_path)
                 # Write each example one by one
                 example = tf.train.Example(features=tf.train.Features(feature={
