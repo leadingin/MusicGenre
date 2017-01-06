@@ -36,6 +36,15 @@ def get_label(path):
     raise NameError("Path error, can't find respective genre.")
 
 
+def dense_to_one_hot(labels_dense, num_classes=10):
+    """Convert class labels from scalars to one-hot vectors."""
+    num_labels = labels_dense.shape[0]
+    index_offset = np.arange(num_labels) * num_classes
+    labels_one_hot = np.zeros((num_labels, num_classes), dtype=float)
+    labels_one_hot.flat[index_offset + labels_dense.ravel()] = 1
+    return labels_one_hot
+
+
 def convert_wavelets_to_tfrecords(wavelets_and_spilit_file_folder, spilit_file_path, output_file_path):
     writer = tf.python_io.TFRecordWriter(output_file_path)
     cur_cA_path = ""
@@ -81,9 +90,10 @@ def convert_wavelets_to_tfrecords(wavelets_and_spilit_file_folder, spilit_file_p
                             features_cD.append(val)
 
                     label = get_label(cur_cA_path)
+                    label_onehot_encoded = dense_to_one_hot(np.array([label]))
                     # Write each example one by one
                     example = tf.train.Example(features=tf.train.Features(feature={
-                        "label": tf.train.Feature(int64_list=tf.train.Int64List(value=[label])),
+                        "label": tf.train.Feature(float_list=tf.train.FloatList(value=label_onehot_encoded[0])),
                         "features_cA": tf.train.Feature(float_list=tf.train.FloatList(value=features_cA)),
                         "features_cD": tf.train.Feature(float_list=tf.train.FloatList(value=features_cD)),
                     }))
