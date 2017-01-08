@@ -42,8 +42,11 @@ learning_rate = 0.001
 training_epochs = 10000
 display_step = 10
 num_threads = 8
-dropout = 0.8
-batch_size = 10
+dropout = 0.75
+L2_norm = 1e-9
+batch_size = 100
+training_size = 8000
+test_size = 2000
 
 n_classes = 10  # total classes (0-9 digits)
 
@@ -115,7 +118,7 @@ def conv_net(x, weights, biases, dropout):
 
 def accuracy(logits, labels):
     correct_prediction = tf.equal(tf.argmax(logits, 1), tf.argmax(labels, 1))
-    accuracy = tf.reduce_mean(tf.cast(correct_prediction, "float"))
+    accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
     tf.scalar_summary("accuracy", accuracy)
     return accuracy
 
@@ -146,14 +149,19 @@ logits = conv_net(x, weights, biases, keep_prob)
 
 
 # Define loss and optimizer & correct_prediction
+
 # NaN bug
-cross_entropy = -tf.reduce_sum(y * tf.log(tf.clip_by_value(logits, 1e-7, 1.0)))
-tf.scalar_summary("cross_entropy", cross_entropy)
+#cross_entropy = -tf.reduce_sum(y * tf.log(tf.clip_by_value(logits, 1e-10, 1.0)))
+
+# cross_entropy_loss with L2 norm
+# cross_entropy_loss = -tf.reduce_sum(y * tf.log(logits) + L2_norm * tf.nn.l2_loss(weights['wd1']))
+cross_entropy_loss = -tf.reduce_sum(y * tf.log(logits))
+tf.scalar_summary("cross_entropy", cross_entropy_loss)
 
 # accuracy
 acc = accuracy(logits, y)
 
-optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(cross_entropy)
+optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(cross_entropy_loss)
 
 # Launch the graph
 
@@ -162,6 +170,10 @@ features_test, label_test = read_and_decode("data/merge/raw_data_test.tfrecords"
 
 #使用shuffle_batch可以随机打乱输入
 audio_batch, label_batch = tf.train.shuffle_batch([features, label],
+                                                batch_size=batch_size, capacity=2000,
+                                                min_after_dequeue=1000)
+
+audio_batch_test, label_batch_test = tf.train.shuffle_batch([features_test, label_test],
                                                 batch_size=batch_size, capacity=2000,
                                                 min_after_dequeue=1000)
 
@@ -178,7 +190,7 @@ with tf.Session() as sess:
 
     # for TensorBoard
     summary_op = tf.merge_all_summaries()
-    summary_writer = tf.train.SummaryWriter('model/', sess.graph_def)
+    summary_writer = tf.train.SummaryWriter('model/', sess.graph)
 
     # Start input enqueue threads.
     coord = tf.train.Coordinator()
@@ -188,7 +200,7 @@ with tf.Session() as sess:
         # pass it in through the feed_dict
         audio_batch_vals, label_batch_vals = sess.run([audio_batch, label_batch])
 
-        _, loss_val, pred_ = sess.run([optimizer, cross_entropy, logits], feed_dict={x:audio_batch_vals, y:label_batch_vals, keep_prob: dropout})
+        _, loss_val, pred_ = sess.run([optimizer, cross_entropy_loss, logits], feed_dict={x:audio_batch_vals, y:label_batch_vals, keep_prob: dropout})
 
         #print("Epoch:", '%06d' % (epoch + 1), "cost=", "{:.9f}".format(loss_val))
         #print(pred_, label_batch_vals)
@@ -196,35 +208,29 @@ with tf.Session() as sess:
         # calculate accuracy at each step
         if (epoch+1) % display_step == 0:
             train_accuracy = sess.run(acc, feed_dict={x:audio_batch_vals, y:label_batch_vals, keep_prob:1.0})
-            print ("step %d, training accuracy %g" % ((epoch+1), train_accuracy))
-            print(pred_, label_batch_vals)
+            print ("training epoch: %d, mini-batch loss: %f, mini-batch training accuracy: %f" % ((epoch+1), loss_val, train_accuracy))
+            # print(pred_, label_batch_vals)
             #print(sess.run(weights))
 
             # add value for Tensorboard at each step
-            summary_str = sess.run(summary_op, feed_dict={x:audio_batch_vals, y:label_batch_vals, keep_prob: 1.0})
-            summary_writer.add_summary(summary_str, (epoch+1))
-
-    print("Training finished.")
-    coord.request_stop()
-    coord.join(threads)
+            #summary_str = sess.run(summary_op, feed_dict={x:audio_batch_vals, y:label_batch_vals, keep_prob: 1.0})
+            #summary_writer.add_summary(summary_str, (epoch+1))
+    save_path = saver.save(sess, "model/model_cnn_raw_data.ckpt")
+    print("#########      Training finished && model saved.      #########")
 
     # Test model
-    correct_num = 0
-    test_example_number = 2000
-    for _ in range(test_example_number):
-        audio_test_val, label_test_val = sess.run([features_test, label_test])
-        audio_test_val_vector = np.array([audio_test_val])
-        test_pred = conv_net(audio_test_val_vector, weights, biases, 1)
+    # batch_test --> reduce_mean --> final_test_accuracy
 
-        # predicted label
-        predocted_label = sess.run(tf.arg_max([test_pred][0][0], 0))
-        # test_label
-        test_label = sess.run(tf.arg_max([label_test_val][0], 0))
+    test_epochs = int(test_size / batch_size)
+    test_accuracy_final = 0.
+    for _ in range(test_epochs):
+        audio_test_vals, label_test_vals = sess.run([audio_batch_test, label_batch_test])
+        test_accuracy = sess.run(acc, feed_dict={x: audio_test_vals, y: label_test_vals, keep_prob: 1.0})
+        test_accuracy_final += test_accuracy
+        print("test epoch: %d, test accuracy: %f" % (_, test_accuracy))
+    test_accuracy_final /= test_epochs
+    print("test accuracy %f" % test_accuracy_final)
 
-        print(predocted_label, test_label)
-        if predocted_label == test_label:
-            correct_num += 1
-
-    print("%i / %i is correct." % (correct_num, test_example_number))
-    print("Accuracy is %f ." % (float(correct_num) / test_example_number))
+    coord.request_stop()
+    coord.join(threads)
     sess.close()
