@@ -70,30 +70,30 @@ def maxpool2d(x, k=4):
 # Create model
 def conv_net(x, weights, biases, dropout):
     # Reshape input picture
-    x = tf.reshape(x, shape=[-1, 1, 65536, 1])   # shape = (batch_size, 1, 65536, 1)
+    x = tf.reshape(x, shape=[-1, 1, x_len, 1])   # shape = (batch_size, 1, 131072, 1)
 
     # Convolution Layer 1
     conv1 = conv2d(x ,weights['wc1'], biases['bc1'], 'conv1', strides=8)
     # Max Pooling (down-sampling)
     conv1 = maxpool2d(conv1, k=2)
 
-    # shape = (batch_size, 1, 4096, 32)
+    # shape = (batch_size, 1, 8192, 32)
 
     # Convolution Layer 2
-    # (4096-4+0)/4 + 1 = 1024
+    # (8192-4+0)/4 + 1 = 2048
     conv2 = conv2d(conv1, weights['wc2'], biases['bc2'], 'conv2', strides=4)
     # Max Pooling (down-sampling)
-    # 1024/2 = 512
+    # 2048/2 = 1024
     conv2 = maxpool2d(conv2, k=2)
-    # shape = (batch_size, 1, 512, 64)
+    # shape = (batch_size, 1, 1024, 64)
 
     # Convolution Layer 3
-    # (512-2+0)/2 + 1 = 256
+    # (1024-2+0)/2 + 1 = 512
     conv3 = conv2d(conv2, weights['wc3'], biases['bc3'], 'conv3', strides=2)
     # Max Pooling (down-sampling)
-    # 256/2 = 128
+    # 512/2 = 256
     conv3 = maxpool2d(conv3, k=2)
-    # shape = (batch_size, 1, 128, 128)
+    # shape = (batch_size, 1, 256, 128)
 
     # Fully connected layer
     # Reshape conv3 output to fit fully connected layer input
@@ -107,6 +107,7 @@ def conv_net(x, weights, biases, dropout):
     # Output, class prediction
     fc_out = tf.add(tf.matmul(fc1, weights['out']), biases['out'])
 
+    fc_out = tf.divide(fc_out, 10e9)
     # softmax output
     out = tf.nn.softmax(fc_out)
     return out
@@ -126,8 +127,8 @@ weights = {
     'wc2': tf.Variable(tf.random_normal([1, 4, 32, 64])),
     # h*w*d 1*2*64 conv, 64 inputs, 128 outputs
     'wc3': tf.Variable(tf.random_normal([1, 2, 64, 128])),
-    # fully connected, 128*128 inputs, 1024 outputs
-    'wd1': tf.Variable(tf.random_normal([128*128, 1024])),
+    # fully connected, 256*128 inputs, 1024 outputs
+    'wd1': tf.Variable(tf.random_normal([256*128, 1024])),
     # 1024 inputs, 10 outputs (class prediction)
     'out': tf.Variable(tf.random_normal([1024, n_classes]))
 }
@@ -156,8 +157,8 @@ optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(cross_e
 
 # Launch the graph
 
-features, label = read_and_decode("data/merge/wavelet_data_training.tfrecords")
-features_test, label_test = read_and_decode("data/merge/wavelet_data_test.tfrecords")
+features, label = read_and_decode("data/merge/raw_data_training.tfrecords")
+features_test, label_test = read_and_decode("data/merge/raw_data_test.tfrecords")
 
 #使用shuffle_batch可以随机打乱输入
 audio_batch, label_batch = tf.train.shuffle_batch([features, label],
@@ -193,13 +194,15 @@ with tf.Session() as sess:
         #print(pred_, label_batch_vals)
 
         # calculate accuracy at each step
-        train_accuracy = sess.run(acc, feed_dict={x:audio_batch_vals, y:label_batch_vals, keep_prob:1.0})
-        print ("step %d, training accuracy %g" % (epoch, train_accuracy))
-        print(pred_, label_batch_vals)
+        if (epoch+1) % display_step == 0:
+            train_accuracy = sess.run(acc, feed_dict={x:audio_batch_vals, y:label_batch_vals, keep_prob:1.0})
+            print ("step %d, training accuracy %g" % ((epoch+1), train_accuracy))
+            print(pred_, label_batch_vals)
+            #print(sess.run(weights))
 
-        # add value for Tensorboard at each step
-        summary_str = sess.run(summary_op, feed_dict={x:audio_batch_vals, y:label_batch_vals, keep_prob: 1.0})
-        summary_writer.add_summary(summary_str, epoch)
+            # add value for Tensorboard at each step
+            summary_str = sess.run(summary_op, feed_dict={x:audio_batch_vals, y:label_batch_vals, keep_prob: 1.0})
+            summary_writer.add_summary(summary_str, (epoch+1))
 
     print("Training finished.")
     coord.request_stop()
