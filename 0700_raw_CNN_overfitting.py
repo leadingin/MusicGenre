@@ -39,7 +39,7 @@ def read_and_decode(filename):
 # Parameters
 x_len = 131072
 learning_rate = 0.001
-training_epochs = 10000
+training_epochs = 100
 display_step = 10
 num_threads = 8
 dropout = 0.75
@@ -225,11 +225,11 @@ with tf.Session() as sess:
     test_accuracy_final = 0.
     for _ in range(test_epochs):
         audio_test_vals, label_test_vals = sess.run([audio_batch_test, label_batch_test])
-        test_accuracy = sess.run(acc, feed_dict={x: audio_test_vals, y: label_test_vals, keep_prob: 1.0})
+        test_accuracy, test_loss_val= sess.run([acc, cross_entropy_loss], feed_dict={x: audio_test_vals, y: label_test_vals, keep_prob: 1.0})
         test_accuracy_final += test_accuracy
-        print("test epoch: %d, test accuracy: %f" % (_, test_accuracy))
+        print("test epoch: %d, test loss: %f, test accuracy: %f" % (_, test_loss_val, test_accuracy))
     test_accuracy_final /= test_epochs
-    print("test accuracy %f" % test_accuracy_final)
+    print("final test accuracy: %f" % test_accuracy_final)
 
     coord.request_stop()
     coord.join(threads)
