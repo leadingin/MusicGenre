@@ -2,7 +2,7 @@
 
 """
 @author: Songgx
-@file: 0700_raw_CNN.py
+@file: 0700_raw_CNN_overfitting.py
 @time: 2017/1/7 16:21
 """
 
