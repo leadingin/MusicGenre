@@ -19,7 +19,7 @@ DURA       = 29.12
 #hop length:no of samples between successive frames S:power spectrogram y: audio time series
 
 
-def log_scale_melspectrogram(path):
+def log_scale_mfcc(path):
     signal, sr = lb.load(path, sr=Fs)
     n_sample = signal.shape[0]
     n_sample_fit = int(DURA*Fs)
@@ -27,13 +27,12 @@ def log_scale_melspectrogram(path):
     if n_sample < n_sample_fit:
         signal = np.hstack((signal, np.zeros((int(DURA*Fs) - n_sample,))))
     elif n_sample > n_sample_fit:
-        signal = signal[(n_sample-n_sample_fit)/2:(n_sample+n_sample_fit)/2]
+        signal = signal[int((n_sample-n_sample_fit)/2):int((n_sample+n_sample_fit)/2)]
 
-    # mfcc = lb.logamplitude(lb.feature.mfcc(y=signal, sr=Fs, n_mfcc=N_MFCC)**2, ref_power=1.0)
     mfcc = lb.logamplitude(lb.feature.mfcc(y=signal, sr=Fs, n_mfcc=N_MFCC) ** 2, ref_power=1.0)
     return mfcc
 
 if __name__ == '__main__':
-    mfcc = log_scale_melspectrogram("classical.00000.au")
+    mfcc = log_scale_mfcc("classical.00000.au")
     print(mfcc.shape)
     print(mfcc)

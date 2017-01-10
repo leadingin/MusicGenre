@@ -28,7 +28,7 @@ def log_scale_melspectrogram(path):
     if n_sample < n_sample_fit:
         signal = np.hstack((signal, np.zeros((int(DURA*Fs) - n_sample,))))
     elif n_sample > n_sample_fit:
-        signal = signal[(n_sample-n_sample_fit)/2:(n_sample+n_sample_fit)/2]
+        signal = signal[int((n_sample-n_sample_fit)/2):int((n_sample+n_sample_fit)/2)]
 
     melspect = lb.logamplitude(lb.feature.melspectrogram(y=signal, sr=Fs, hop_length=N_OVERLAP, n_fft=N_FFT, n_mels=N_MELS)**2, ref_power=1.0)
 

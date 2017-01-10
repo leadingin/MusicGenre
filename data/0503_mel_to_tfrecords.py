@@ -2,8 +2,8 @@
 
 """
 @author: Songgx
-@file: 0404_raw_to_tfrecords.py
-@time: 2017/1/7 13:30
+@file: 0503_mel_to_tfrecords.py
+@time: 2017/1/10 13:44
 """
 
 # https://github.com/tobegit3hub/deep_recommend_system/blob/master/data/convert_cancer_to_tfrecords.py
@@ -45,7 +45,7 @@ def dense_to_one_hot(labels_dense, num_classes=10):
     return labels_one_hot
 
 
-def convert_raw_to_tfrecords(wavelets_and_spilit_file_folder, spilit_file_path, output_file_path):
+def convert_mel_to_tfrecords(wavelets_and_spilit_file_folder, spilit_file_path, output_file_path):
     writer = tf.python_io.TFRecordWriter(output_file_path)
     cur_raw_path = ""
 
@@ -65,16 +65,8 @@ def convert_raw_to_tfrecords(wavelets_and_spilit_file_folder, spilit_file_path, 
                 path = root + "/" + file
                 cur_raw_path = path
                 if cur_raw_path != "":
-                    raw_waves = np.loadtxt(cur_raw_path, dtype=np.float32, delimiter="\n")
+                    feature_waves = np.loadtxt(cur_raw_path, dtype=np.float32, delimiter=" ")
 
-                    # NaN --> 0.
-                    features_raw = []
-                    for i in raw_waves:
-                        val = float(i)
-                        if math.isnan(val):
-                            features_raw.append(0.)
-                        else:
-                            features_raw.append(val)
 
                     # onehot encoded label
                     label = get_label(cur_raw_path)
@@ -83,7 +75,8 @@ def convert_raw_to_tfrecords(wavelets_and_spilit_file_folder, spilit_file_path, 
                     # Write each example one by one
                     example = tf.train.Example(features=tf.train.Features(feature={
                         "label": tf.train.Feature(float_list=tf.train.FloatList(value=label_onehot_encoded[0])),
-                        "features_raw": tf.train.Feature(float_list=tf.train.FloatList(value=features_raw)),
+                        # (96, 1366)
+                        "features_raw": tf.train.Feature(float_list=tf.train.FloatList(value=feature_waves)),
                     }))
 
                     writer.write(example.SerializeToString())
@@ -96,21 +89,9 @@ def convert_raw_to_tfrecords(wavelets_and_spilit_file_folder, spilit_file_path, 
 
 if __name__ == "__main__":
 
-    raw_and_spilit_file_path = 'C:/Users/song/data/raw_spilited'
-    training_set_path = raw_and_spilit_file_path + '/training_set_raw.txt'
-    test_set_path = raw_and_spilit_file_path+'/test_set_raw.txt'
+    raw_and_spilit_file_path = 'C:/Users/song/data/mel_spectrogram'
+    training_set_path = raw_and_spilit_file_path + '/training_set_mel.txt'
+    test_set_path = raw_and_spilit_file_path+'/test_set_mel.txt'
 
-    convert_raw_to_tfrecords(raw_and_spilit_file_path, training_set_path, "merge/raw_data_training.tfrecords")
-    convert_raw_to_tfrecords(raw_and_spilit_file_path, test_set_path, "merge/raw_data_test.tfrecords")
-
-    '''
-    # test_get_label()
-
-    for root, subdirs, files in os.walk("C:/Users/song/data/wavelets"):
-        files.sort()
-        # ['blues', 'classical', 'country', 'disco', 'hiphop', 'jazz', 'metal', 'pop', 'reggae', 'rock']
-        # 分别对应[0-9]
-        for file in files:
-            path = root + "/" + file
-            print(get_label(path), path)
-    '''
+    convert_mel_to_tfrecords(raw_and_spilit_file_path, training_set_path, "merge/mel_data_training.tfrecords")
+    convert_mel_to_tfrecords(raw_and_spilit_file_path, test_set_path, "merge/mel_data_test.tfrecords")
