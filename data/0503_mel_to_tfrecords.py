@@ -66,7 +66,7 @@ def convert_mel_to_tfrecords(wavelets_and_spilit_file_folder, spilit_file_path, 
                 cur_raw_path = path
                 if cur_raw_path != "":
                     feature_waves = np.loadtxt(cur_raw_path, dtype=np.float32, delimiter=" ")
-
+                    feature_bytes = feature_waves.tobytes()
 
                     # onehot encoded label
                     label = get_label(cur_raw_path)
@@ -76,7 +76,8 @@ def convert_mel_to_tfrecords(wavelets_and_spilit_file_folder, spilit_file_path, 
                     example = tf.train.Example(features=tf.train.Features(feature={
                         "label": tf.train.Feature(float_list=tf.train.FloatList(value=label_onehot_encoded[0])),
                         # (96, 1366)
-                        "features_raw": tf.train.Feature(float_list=tf.train.FloatList(value=feature_waves)),
+                        "features_mel": tf.train.Feature(bytes_list=tf.train.BytesList(value=[feature_bytes])),
+
                     }))
 
                     writer.write(example.SerializeToString())
@@ -84,6 +85,22 @@ def convert_mel_to_tfrecords(wavelets_and_spilit_file_folder, spilit_file_path, 
 
     writer.close()
     print("###############   Finished.   #############")
+
+
+'''
+
+read and decode example:
+
+    features = tf.parse_single_example(serialized_example,
+               features={
+                   'label': tf.FixedLenFeature([], tf.int64),
+                   'img_raw' : tf.FixedLenFeature([], tf.string),
+               })
+
+img = tf.decode_raw(features['img_raw'], tf.uint8)
+img = tf.reshape(img, [224, 224, 3])
+
+'''
 
 # convert_tfrecords("scat_data_test.txt", "scat_data_test.tfrecords", "/merge/")
 
