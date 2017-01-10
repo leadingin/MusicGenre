@@ -39,7 +39,7 @@ def read_and_decode(filename):
 # Parameters
 x_len = 131072
 learning_rate = 0.001
-training_epochs = 100
+training_epochs = 10000
 display_step = 10
 num_threads = 8
 dropout = 0.75
