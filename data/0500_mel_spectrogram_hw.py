@@ -35,6 +35,7 @@ def log_scale_melspectrogram(path):
     return melspect
 
 if __name__ == '__main__':
-    melspect = log_scale_melspectrogram('jazz.00000.au')
+    #melspect = log_scale_melspectrogram('jazz.00000.au')
+    melspect = log_scale_melspectrogram('/media/song/DATA/dh/DL/music/magnatune/0/american_bach_soloists-joseph_haydn__masses-01-kyrie__allegro_moderato-30-59.mp3')
     print(melspect.shape)
     print(melspect)
