@@ -30,12 +30,12 @@ def log_scale_melspectrogram(path):
     elif n_sample > n_sample_fit:
         signal = signal[int((n_sample-n_sample_fit)/2):int((n_sample+n_sample_fit)/2)]
 
-    melspect = lb.logamplitude(lb.feature.melspectrogram(y=signal, sr=Fs, hop_length=N_OVERLAP, n_fft=N_FFT, n_mels=N_MELS)**2, ref_power=1.0)
+    melspect = lb.logamplitude(lb.feature.melspectrogram(y=signal, sr=Fs, hop_length=N_OVERLAP, n_fft=N_FFT, n_mels=N_MELS), ref_power=1.0)
 
     return melspect
 
 if __name__ == '__main__':
-    #melspect = log_scale_melspectrogram('jazz.00000.au')
-    melspect = log_scale_melspectrogram('/media/song/DATA/dh/DL/music/magnatune/0/american_bach_soloists-joseph_haydn__masses-01-kyrie__allegro_moderato-30-59.mp3')
+    melspect = log_scale_melspectrogram('jazz.00000.au')
+    #melspect = log_scale_melspectrogram('D:/dh/DL/music/MTT_wav/0/american_bach_soloists-j_s__bach__cantatas_volume_v-01-gleichwie_der_regen_und_schnee_vom_himmel_fallt_bwv_18_i_sinfonia-0-29.wav')
     print(melspect.shape)
     print(melspect)

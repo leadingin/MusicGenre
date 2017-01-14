@@ -30,7 +30,7 @@ def read_and_decode(filename):
 
 # Parameters
 learning_rate = 0.001
-training_iters = 100000
+training_iters = 160
 training_size = 8000
 test_size = 2000
 batch_size = 50

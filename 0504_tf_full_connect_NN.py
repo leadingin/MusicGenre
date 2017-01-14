@@ -69,7 +69,7 @@ batch_size = 20
 column_num = count_column_num(training_csv_file_path, " ")
 # file_length = file_len(csv_file_path)
 # Network Parameters
-n_hidden_1 = 1024  # 1st layer number of features
+n_hidden_1 = 512  # 1st layer number of features
 n_hidden_2 = 1024  # 2nd layer number of features
 n_hidden_3 = 1024  # 2nd layer number of features
 
