@@ -14,6 +14,7 @@ state_size = 1024
 learning_rate = 0.001
 training_epochs = 1500 * 150 # 1500 iterations, 150 epochs
 display_step = 100
+dropout = 0.75
 
 x_height = 96
 x_width = 1366
@@ -73,6 +74,7 @@ def RNN(x, weights, biases):
 
     # Define a lstm cell with tensorflow
     lstm_cell = tf.nn.rnn_cell.GRUCell(state_size)
+    lstm_cell = tf.nn.rnn_cell.DropoutWrapper(lstm_cell, output_keep_prob=dropout)
     #lstm_cell = basic_gru.GRUCell(state_size)
     # Get lstm cell output
     outputs, states = tf.nn.rnn(lstm_cell, x, dtype=tf.float32)
