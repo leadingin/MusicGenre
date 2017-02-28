@@ -20,11 +20,11 @@ x_width = 1366
 n_tags = 50
 
 learning_rate = 0.001
-training_epochs = 1500 * 150 # 1500 iterations, 150 epochs
+training_epochs = 8000 * 150 # 8000 iterations, 150 epochs
 display_step = 100
 total_series_length = x_height * x_width
-state_size = 256
-batch_size = 5
+state_size = 512
+batch_size = 2
 num_layers = 2
 
 
