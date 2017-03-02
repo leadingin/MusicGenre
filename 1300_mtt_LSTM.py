@@ -10,7 +10,7 @@ from tensorflow.python.ops.rnn import dynamic_rnn
 
 batch_size = 10
 num_steps = 96 # number of truncated backprop steps
-state_size = 512
+state_size = 1024
 learning_rate = 0.001
 training_epochs = 1500 * 150 # 1500 iterations, 150 epochs
 display_step = 100

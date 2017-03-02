@@ -140,7 +140,7 @@ with tf.Session() as sess:
         # pass it in through the feed_dict
         audio_batch_vals_training, label_batch_vals_training = sess.run([audio_batch_training, label_batch_training])
         _, loss_val, pred_ = sess.run([optimizer, cross_entropy_loss, logits], feed_dict={x:audio_batch_vals_training, y:label_batch_vals_training})
-
+        #print(pred_, sess.run(weights))
         #print("Epoch:", '%06d' % (epoch + 1), "cost=", "{:.9f}".format(loss_val))
         #print(pred_, label_batch_vals_training)
 
