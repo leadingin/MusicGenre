@@ -2,7 +2,7 @@
 
 """
 @author: Songgx
-@file: 1304_mtt_multi-layer_LSTM_OOM.py
+@file: 1309_1_mtt_multi-layer_BNLSTM_truncated_v2.py
 @time: 2017/2/27 21:10
 
 https://medium.com/@erikhallstrm/using-the-dynamicrnn-api-in-tensorflow-7237aba7f7ea#.qduigey12
@@ -15,18 +15,22 @@ from sklearn.metrics import roc_auc_score
 import bnlstm
 
 
+training_num = 14951
+valdation_num = 1825
+test_num = 4332
+
 x_height = 96
 x_width = 1366
 # 总共的tag数
 n_tags = 50
 
 learning_rate = 1e-5
-training_iterations = 150 * 64 * 2000 # 150 * 64 * 2000 == 19,200,000 iterations, about 150 epochs
-display_step = 1000
+training_iterations = 200000# 00000 # 200 * 64 * 2000 ==  iterations, about 200 epochs
+display_step = 500
 state_size = 512
 batch_size = 64
 num_layers = 5
-dropout = 0.75
+dropout=0.7
 
 # truncated_backprop_length
 truncated_backprop_length = 1366
@@ -87,6 +91,8 @@ def get_roc_auc_scores(tags, logits):
 # placeholders
 batchX_placeholder = tf.placeholder(tf.float32, [batch_size, truncated_num, truncated_backprop_length])
 batchY_placeholder = tf.placeholder(tf.float32, [batch_size, n_tags])
+output_keep_prob=tf.placeholder(tf.float32)
+phase_training = tf.placeholder(tf.bool)
 
 init_state = tf.placeholder(tf.float32, [num_layers, 2, batch_size, state_size])
 
@@ -109,7 +115,7 @@ biases = {
 # initial state with zeros
 rnn_tuple_state_initial = tuple(np.zeros((num_layers, 2, batch_size, state_size), dtype=np.float32))
 
-def RNN(X, weights, biases, rnn_tuple_state):
+def RNN(X, weights, biases, rnn_tuple_state, phase_training=np.array(True)):
     # Prepare data shape to match `rnn` function requirements
     # Current data input shape: (batch_size, n_steps, n_input)
     # Required shape: 'n_steps' tensors list of shape (batch_size, n_input)
@@ -120,8 +126,8 @@ def RNN(X, weights, biases, rnn_tuple_state):
     # Split to get a list of 'n_steps' tensors of shape (batch_size, n_input)
     X = tf.split(0, truncated_num, X)
 
-    cell = bnlstm.BNLSTMCell(state_size, tf.constant(True))
-    cell = tf.nn.rnn_cell.DropoutWrapper(cell, output_keep_prob=dropout)
+    cell = bnlstm.BNLSTMCell(state_size, phase_training)
+    cell = tf.nn.rnn_cell.DropoutWrapper(cell, 1.0, dropout)
     cell = tf.nn.rnn_cell.MultiRNNCell([cell] * num_layers, state_is_tuple=True)
 
     # Forward passes
@@ -146,6 +152,7 @@ audio_batch_test, label_batch_test = load_and_shuffle_to_batch_data("data/merge/
 
 with tf.Session() as sess:
     sess.run(tf.global_variables_initializer())
+    saver = tf.train.Saver()
     # Start input enqueue threads.
     coord = tf.train.Coordinator()
     threads = tf.train.start_queue_runners(sess=sess, coord=coord)
@@ -157,35 +164,41 @@ with tf.Session() as sess:
         _, loss_val, pred_ = sess.run([train_step, mean_batch_loss, logits],
                                       feed_dict={batchX_placeholder: audio_batch_vals_training,
                                                  batchY_placeholder: label_batch_vals_training,
+                                                 output_keep_prob: dropout,
+                                                 phase_training: np.array(True)
                                                  })
         if (iteration_idx + 1) % display_step == 0:
-            validation_iterations = 20
+            validation_iterations = 28 # valdation_num / batch_size = 28.5
             cur_validation_acc = 0.
             for _ in range(validation_iterations):
                 audio_batch_validation_vals, label_batch_validation_vals = sess.run([audio_batch_validation, label_batch_validation])
 
                 logits_validation, loss_val_validation = sess.run([logits, mean_batch_loss],
                                                                   feed_dict={batchX_placeholder: audio_batch_validation_vals,
-                                                                             batchY_placeholder: label_batch_validation_vals,# keep_prob: 1.0
+                                                                             batchY_placeholder: label_batch_validation_vals,
+                                                                             output_keep_prob: 1.0,
+                                                                             phase_training:np.array(False)
                                                                              })
                 validation_accuracy = get_roc_auc_scores(label_batch_validation_vals, logits_validation)
                 cur_validation_acc += validation_accuracy
 
             cur_validation_acc /= validation_iterations
             print("iter %d, training loss: %f, validation accuracy: %f" % ((iteration_idx + 1), loss_val, cur_validation_acc))
-
-    print("#########      Training finished.      #########")
+    save_path = saver.save(sess, "model/1309_1_mtt_multi-layer_BNLSTM_truncated_v2.ckpt")
+    print("#########      Training finished && model saved.      #########")
 
     # Test model
     # batch_test --> reduce_mean --> final_test_accuracy
 
-    test_iterations = 70
+    test_iterations = 67 # 4332/64=67.68
     test_accuracy_final = 0.
     for _ in range(test_iterations):
         audio_test_vals, label_test_vals = sess.run([audio_batch_test, label_batch_test])
         logits_test, test_loss_val = sess.run([logits, mean_batch_loss],
                                               feed_dict={batchX_placeholder: audio_test_vals,
-                                                         batchY_placeholder: label_test_vals, #keep_prob: 1.0
+                                                         batchY_placeholder: label_test_vals,
+                                                         output_keep_prob: 1.0,
+                                                         phase_training:np.array(False)
                                                          })
         test_accuracy = get_roc_auc_scores(label_test_vals, logits_test)
         test_accuracy_final += test_accuracy
