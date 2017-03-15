@@ -82,9 +82,15 @@ def RNN(x, weights, biases):
 
     # Define a lstm cell with tensorflow
     lstm_cell = bnlstm.BNLSTMCell(state_size, True)
+    tf.zeros_initializer()
+    # c, h
+    initialState = (
+        tf.random_normal([batch_size, state_size], stddev=0.1),
+        tf.random_normal([batch_size, state_size], stddev=0.1))
+
     lstm_cell = tf.nn.rnn_cell.DropoutWrapper(lstm_cell, output_keep_prob=dropout)
     # Get lstm cell output
-    outputs, states = tf.nn.rnn(lstm_cell, x, dtype=tf.float32)
+    outputs, states = tf.nn.rnn(lstm_cell, x,initial_state=initialState, dtype=tf.float32)
 
     # Linear activation, using rnn inner loop last output
     return tf.matmul(outputs[-1], weights['out']) + biases['out']

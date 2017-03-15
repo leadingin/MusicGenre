@@ -10,8 +10,8 @@ from tensorflow.python.ops.rnn import dynamic_rnn
 
 batch_size = 10
 num_steps = 96 # number of truncated backprop steps
-state_size = 1024
-learning_rate = 0.001
+state_size = 1536
+learning_rate = 0.000001
 training_epochs = 1500 * 150 # 1500 iterations, 150 epochs
 display_step = 100
 dropout = 0.75
@@ -119,6 +119,7 @@ audio_batch_validation, label_batch_validation = load_and_shuffle_to_batch_data(
 audio_batch_test, label_batch_test = load_and_shuffle_to_batch_data("data/merge/mtt_mel_test_filtered.tfrecords", batch_size)
 
 logits = RNN(x, weights, biases)
+pred_prob = tf.nn.softmax(logits)
 cross_entropy_loss = tf.reduce_sum(tf.nn.softmax_cross_entropy_with_logits(logits, y))
 optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(cross_entropy_loss)
 
@@ -139,7 +140,7 @@ with tf.Session() as sess:
     for epoch in range(training_epochs):
         # pass it in through the feed_dict
         audio_batch_vals_training, label_batch_vals_training = sess.run([audio_batch_training, label_batch_training])
-        _, loss_val, pred_ = sess.run([optimizer, cross_entropy_loss, logits], feed_dict={x:audio_batch_vals_training, y:label_batch_vals_training})
+        _, loss_val, pred_ = sess.run([optimizer, cross_entropy_loss, pred_prob], feed_dict={x:audio_batch_vals_training, y:label_batch_vals_training})
         #print(pred_, sess.run(weights))
         #print("Epoch:", '%06d' % (epoch + 1), "cost=", "{:.9f}".format(loss_val))
         #print(pred_, label_batch_vals_training)
@@ -150,15 +151,15 @@ with tf.Session() as sess:
             for _ in range(validation_epochs):
                 audio_batch_validation_vals, label_batch_validation_vals = sess.run(
                     [audio_batch_validation, label_batch_validation])
-                logits_validation, loss_val_validation = sess.run([logits, cross_entropy_loss],
+                pred_prob_validation, loss_val_validation = sess.run([pred_prob, cross_entropy_loss],
                                                                   feed_dict={x: audio_batch_validation_vals,
                                                                              y: label_batch_validation_vals})
-                validation_accuracy = get_roc_auc_scores(label_batch_validation_vals, logits_validation)
+                validation_accuracy = get_roc_auc_scores(label_batch_validation_vals, pred_prob_validation)
                 cur_validation_acc += validation_accuracy
                 # print("test iter: %d, test loss: %f, test accuracy: %f" % (_, test_loss_val, test_accuracy))
             cur_validation_acc /= validation_epochs
             print("training iter: %d, mini-batch loss: %f, validation accuracy: %f" % (
-            (epoch + 1), loss_val, validation_accuracy))
+            (epoch + 1), loss_val, cur_validation_acc))
             # print(pred_, label_batch_vals)
             # print(sess.run(weights))
 
@@ -175,8 +176,8 @@ with tf.Session() as sess:
     test_accuracy_final = 0.
     for _ in range(test_epochs):
         audio_test_vals, label_test_vals = sess.run([audio_batch_test, label_batch_test])
-        logits_test, test_loss_val= sess.run([logits, cross_entropy_loss], feed_dict={x: audio_test_vals, y:label_test_vals})
-        test_accuracy = get_roc_auc_scores(label_test_vals, logits_test)
+        pred_prob_test, test_loss_val= sess.run([pred_prob, cross_entropy_loss], feed_dict={x: audio_test_vals, y:label_test_vals})
+        test_accuracy = get_roc_auc_scores(label_test_vals, pred_prob_test)
         test_accuracy_final += test_accuracy
         print("test epoch: %d, test loss: %f, test accuracy: %f" % (_, test_loss_val, test_accuracy))
     test_accuracy_final /= test_epochs

@@ -19,18 +19,18 @@ x_width = 1366
 # 总共的tag数
 n_tags = 50
 
-learning_rate = 0.001
-training_epochs = 1500 * 150 # 1500 iterations, 150 epochs
-display_step = 100
+learning_rate = 0.003
+training_iterations = 2 #1500 * 150 # 1500 iterations, 150 epochs
+display_step = 2 #100
 total_series_length = x_height * x_width
 state_size = 512
 batch_size = 12
 num_layers = 3
 
 # truncated_backprop_length
-truncated_backprop_length = 1366
+truncated_backprop_length = 1366 * 8
 # truncated_num
-truncated_num = 96  # total_series_length / truncated_backprop_length
+truncated_num = 12  # total_series_length / truncated_backprop_length
 
 
 def read_and_decode(filename):
@@ -128,7 +128,7 @@ with tf.Session() as sess:
 
     _current_state = np.zeros((num_layers, 2, batch_size, state_size))
     valdation_accuracy_final = 0.
-    for iteration_idx in range(training_epochs):
+    for iteration_idx in range(training_iterations):
         audio_batch_vals_training, label_batch_vals_training = sess.run([audio_batch_training, label_batch_training])
         for truncated_idx in range(truncated_num):
             start_idx = truncated_idx * truncated_backprop_length
@@ -149,17 +149,35 @@ with tf.Session() as sess:
                 _current_state = _current_state[0]
 
         print("iter %d, loss: %f" % ((iteration_idx + 1), _total_loss))
-        print(_current_state)
 
         if (iteration_idx + 1) % display_step == 0:
             validation_epochs = 100
             cur_validation_acc = 0.
             for _ in range(validation_epochs):
                 audio_batch_validation_vals, label_batch_validation_vals = sess.run([audio_batch_validation, label_batch_validation])
-                logits_validation, loss_val_validation = sess.run([logits, total_loss],
-                                                                  feed_dict={batchX_placeholder: audio_batch_validation_vals,
-                                                                             batchY_placeholder: label_batch_validation_vals})
-                validation_accuracy = get_roc_auc_scores(label_batch_validation_vals, logits_validation)
+
+                for truncated_idx in range(truncated_num):
+                    start_idx = truncated_idx * truncated_backprop_length
+                    end_idx = start_idx + truncated_backprop_length
+
+                    batchX_validation = audio_batch_validation_vals[:, start_idx:end_idx]
+                    batchY_validation = label_batch_validation_vals
+
+                    if truncated_idx == (truncated_num - 1):
+
+                        _logits_validation, _loss_val_validation = sess.run([logits, total_loss],
+                                                                            feed_dict={
+                                                                                batchX_placeholder: batchX_validation,
+                                                                                batchY_placeholder: batchY_validation,
+                                                                                init_state: _current_state})
+                    else:
+                        _current_state = sess.run([current_state], feed_dict={batchX_placeholder: batchX_validation,
+                                                                              batchY_placeholder: batchY_validation,
+                                                                              init_state: _current_state})
+                        _current_state = _current_state[0]
+
+
+                validation_accuracy = get_roc_auc_scores(label_batch_validation_vals, _logits_validation)
                 cur_validation_acc += validation_accuracy
                 # print("test iter: %d, test loss: %f, test accuracy: %f" % (_, test_loss_val, test_accuracy))
             cur_validation_acc /= validation_epochs
@@ -175,12 +193,29 @@ with tf.Session() as sess:
     test_accuracy_final = 0.
     for _ in range(test_epochs):
         audio_test_vals, label_test_vals = sess.run([audio_batch_test, label_batch_test])
-        logits_test, test_loss_val = sess.run([logits, total_loss],
-                                              feed_dict={batchX_placeholder: audio_test_vals,
-                                                         batchY_placeholder: label_test_vals})
-        test_accuracy = get_roc_auc_scores(label_test_vals, logits_test)
+
+        for truncated_idx in range(truncated_num):
+            start_idx = truncated_idx * truncated_backprop_length
+            end_idx = start_idx + truncated_backprop_length
+
+            batchX_test = audio_test_vals[:, start_idx:end_idx]
+            batchY_test = label_test_vals
+
+            if truncated_idx == (truncated_num - 1):
+
+                _logits_test, _loss_val_test = sess.run([logits, total_loss],
+                                                                    feed_dict={
+                                                                        batchX_placeholder: batchX_test,
+                                                                        batchY_placeholder: batchY_test,
+                                                                        init_state: _current_state})
+            else:
+                _current_state = sess.run([current_state], feed_dict={batchX_placeholder: batchX_test,
+                                                                      batchY_placeholder: batchY_test,
+                                                                      init_state: _current_state})
+                _current_state = _current_state[0]
+        test_accuracy = get_roc_auc_scores(label_test_vals, _logits_test)
         test_accuracy_final += test_accuracy
-        print("test epoch: %d, test loss: %f, test accuracy: %f" % (_, test_loss_val, test_accuracy))
+        print("test epoch: %d, test loss: %f, test accuracy: %f" % (_, _loss_val_test, test_accuracy))
     test_accuracy_final /= test_epochs
     print("final test accuracy: %f" % test_accuracy_final)
 

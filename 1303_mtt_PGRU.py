@@ -156,7 +156,7 @@ with tf.Session() as sess:
                 cur_validation_acc += validation_accuracy
                 #print("test iter: %d, test loss: %f, test accuracy: %f" % (_, test_loss_val, test_accuracy))
             cur_validation_acc /= validation_epochs
-            print("training iter: %d, mini-batch loss: %f, validation accuracy: %f" % ((epoch + 1), loss_val, validation_accuracy))
+            print("training iter: %d, mini-batch loss: %f, validation accuracy: %f" % ((epoch + 1), loss_val, cur_validation_acc))
             # print(pred_, label_batch_vals)
             #print(sess.run(weights))
 

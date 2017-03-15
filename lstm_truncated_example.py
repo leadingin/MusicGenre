@@ -18,7 +18,6 @@ tf version : 0.12.0
 from __future__ import print_function
 
 import tensorflow as tf
-import numpy as np
 
 # Import MNIST data
 from tensorflow.examples.tutorials.mnist import input_data
@@ -34,7 +33,7 @@ handle 28 sequences of 28 steps for every sample.
 # Parameters
 learning_rate = 0.001
 training_iters = 100000
-batch_size = 64
+batch_size = 128
 display_step = 10
 
 # Network Parameters
@@ -44,8 +43,8 @@ n_hidden = 128  # hidden layer num of features
 n_classes = 10  # MNIST total classes (0-9 digits)
 
 # tf Graph input
-x = tf.placeholder("float", [batch_size, n_steps, n_input])
-y = tf.placeholder("float", [batch_size, n_classes])
+x = tf.placeholder("float", [None, n_steps, n_input])
+y = tf.placeholder("float", [None, n_classes])
 
 # Define weights
 weights = {
@@ -75,12 +74,10 @@ def RNN(x, weights, biases):
     outputs, states = tf.nn.rnn(lstm_cell, x, dtype=tf.float32)
 
     # Linear activation, using rnn inner loop last output
-    return tf.matmul(outputs[-1], weights['out']) + biases['out'], outputs, states
+    return tf.matmul(outputs[-1], weights['out']) + biases['out']
 
-results_tuple = RNN(x, weights, biases)
-pred = results_tuple[0]
-outputs = results_tuple[1]
-states = results_tuple[2]
+
+pred = RNN(x, weights, biases)
 
 # Define loss and optimizer
 cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=pred, labels=y))
@@ -92,8 +89,6 @@ accuracy = tf.reduce_mean(tf.cast(correct_pred, tf.float32))
 
 # Initializing the variables
 init = tf.global_variables_initializer()
-
-np.set_printoptions(threshold=10e5)  # 全部打印输出
 
 # Launch the graph
 with tf.Session() as sess:
@@ -107,9 +102,7 @@ with tf.Session() as sess:
         # Reshape data to get 28 seq of 28 elements
         batch_x = batch_x.reshape((batch_size, n_steps, n_input))
         # Run optimization op (backprop)
-        _, _outputs, _states = sess.run([optimizer, outputs, states], feed_dict={x: batch_x, y: batch_y})
-
-        # print(_outputs[27][0])
+        sess.run(optimizer, feed_dict={x: batch_x, y: batch_y})
         if step % display_step == 0:
             # Calculate batch accuracy
             acc = sess.run(accuracy, feed_dict={x: batch_x, y: batch_y})
@@ -122,7 +115,7 @@ with tf.Session() as sess:
     print("Optimization Finished!")
 
     # Calculate accuracy for 128 mnist test images
-    test_len = batch_size
+    test_len = 128
     test_data = mnist.test.images[:test_len].reshape((-1, n_steps, n_input))
     test_label = mnist.test.labels[:test_len]
     print("Testing Accuracy:", \
