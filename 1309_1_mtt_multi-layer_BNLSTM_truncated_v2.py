@@ -24,9 +24,15 @@ x_width = 1366
 # 总共的tag数
 n_tags = 50
 
-learning_rate = 1e-5
+global_step = tf.Variable(0, trainable=False)
+learning_rate = tf.train.exponential_decay(
+                                        1e-5,                # Base learning rate.
+                                        global_step,         # Current index into the dataset.
+                                        20000,               # Decay step.
+                                        0.96,                # Decay rate.
+                                        staircase=True)
 training_iterations = 200000# 00000 # 200 * 64 * 2000 ==  iterations, about 200 epochs
-display_step = 500
+display_step = 1000
 state_size = 512
 batch_size = 64
 num_layers = 5
@@ -144,7 +150,7 @@ labels = tf.reshape(batchY_placeholder, [-1, n_tags])
 cross_entropy_losses = tf.nn.softmax_cross_entropy_with_logits(logits, batchY_placeholder)
 mean_batch_loss = tf.reduce_mean(cross_entropy_losses)
 
-train_step = tf.train.AdamOptimizer(learning_rate).minimize(mean_batch_loss)
+train_step = tf.train.AdamOptimizer(learning_rate).minimize(mean_batch_loss, global_step=global_step)
 
 audio_batch_training, label_batch_training = load_and_shuffle_to_batch_data("data/merge/mtt_mel_training_filtered.tfrecords", batch_size)
 audio_batch_validation, label_batch_validation = load_and_shuffle_to_batch_data("data/merge/mtt_mel_validation_filtered.tfrecords", batch_size)
